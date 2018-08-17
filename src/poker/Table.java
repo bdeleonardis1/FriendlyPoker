@@ -1,6 +1,7 @@
 package poker;
 
 import java.util.Random;
+import java.util.Arrays;
 
 enum Game {nlhe, plo};
 
@@ -26,9 +27,9 @@ public class Table {
 		this.smallBlind = bigBlind / 2;
 		this.bigBlind = bigBlind;
 		
-		if (handed > 9) {
+		if (handed >= 9) {
 			handed = 9;
-		} else if (handed > 6) {
+		} else if (handed >= 6) {
 			handed = 6;
 		} else {
 			handed = 2;
@@ -112,6 +113,7 @@ public class Table {
 	public void startGame() {
 		if (activePlayers >= 2) {
 			startedPlay = true;
+			buttonIndex = 0;
 		}
 	}
 	
@@ -156,18 +158,22 @@ public class Table {
 	}
 	
 	public void playHand() {
-		GamePlayer handPlayer = new NLHEHandPlayer(this);
-		handPlayer.PlayHand();
+		GamePlayer handPlayer = new NLHEHandPlayer(this, PlayableDeck.getShuffledDeck());
+		handPlayer.playHand();
 		buttonIndex = nextPlayerIndex(seats, buttonIndex);
 	}
 	
-	public static int nextPlayerIndex(String[] players, int index) {
-		int currIndex = index+1;
+	public static int nextPlayerIndex(String[] players, int index) {		
+		int currIndex = (index+1) % players.length;
 		while (players[currIndex] == null) {
 			currIndex = (currIndex+1) % players.length;
 		}
 		
 		return currIndex;
+	}
+	
+	public String getPlayer(int index) {
+		return seats[index];
 	}
 }
  
