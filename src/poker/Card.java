@@ -1,11 +1,32 @@
 package poker;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 enum Suit {heart, diamond, spade, club};
 enum Rank {two, three, four, five, six, seven, eight, nine, ten, jack, queen, king, ace};
 
 public class Card implements Comparable<Card> {
 	private Rank rank;
 	private Suit suit;
+	
+	private static Map<Rank, Integer> rankToValue = new EnumMap<Rank, Integer>(Rank.class);
+	static {
+		rankToValue.put(Rank.two, 2);
+		rankToValue.put(Rank.three, 3);
+		rankToValue.put(Rank.four, 4);
+		rankToValue.put(Rank.five, 5);
+		rankToValue.put(Rank.six, 6);
+		rankToValue.put(Rank.seven, 7);
+		rankToValue.put(Rank.eight, 8);
+		rankToValue.put(Rank.nine, 9);
+		rankToValue.put(Rank.ten, 10);
+		rankToValue.put(Rank.jack, 11);
+		rankToValue.put(Rank.queen, 12);
+		rankToValue.put(Rank.king, 13);
+		rankToValue.put(Rank.ace, 14);
+	}
+	
 	
 	public Card(Rank rank, Suit suit) {
 		this.rank = rank;
@@ -18,19 +39,6 @@ public class Card implements Comparable<Card> {
 	
 	public Rank getRank() {
 		return rank;
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		Card otherCard = null;
-		try {
-			otherCard = (Card) o;
-		} catch (ClassCastException e) {
-			e.printStackTrace();
-			return false;
-		}
-		
-		return o != null && otherCard.getSuit() == suit && otherCard.getRank() == rank;
 	}
 	
 	@Override 
@@ -86,7 +94,22 @@ public class Card implements Comparable<Card> {
 		}
 	}
 	
+	public int getNumericalRank() {
+		return rankToValue.get(rank);
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Card) {
+			Card other = (Card) o;
+			return rank == other.rank && suit == other.suit;
+		}
+		
+		return false;
+	}
+	
+	@Override
 	public int compareTo(Card card) {
-		return -1;
+		return rankToValue.get(rank) - rankToValue.get(card.rank);
 	}
 }

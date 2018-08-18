@@ -1,5 +1,6 @@
 package poker;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,6 +38,7 @@ public class NLHEHandPlayer implements GamePlayer {
 		System.out.println("Dealt the hand.");
 		winner = betting(true);
 		if (winner != -1) {
+			
 			grantpot(winner);
 			return;
 		}
@@ -58,8 +60,8 @@ public class NLHEHandPlayer implements GamePlayer {
 			grantpot(winner);
 			return;
 		}
-		winner = showdown();
-		grantpot(winner);
+		List<Integer> winners = showdown();
+		grantpot(winners);
 	}
 
 	private void dealHand() {
@@ -187,20 +189,39 @@ public class NLHEHandPlayer implements GamePlayer {
 		return winner;
 	}
 
-	private int showdown() {
-		List<Integer> activeHands = new LinkedList<>();
-		for (int i = 0; i < active.length; i++) {
+	private List<Integer> showdown() {
+		HandValue[] handValues = new HandValue[hands.length];
+		for (int i = 0; i < hands.length; i++) {
 			if (active[i]) {
-				activeHands.add(i);
+				handValues[i] = HandValue.getHandValue(hands[i], board); 
 			}
-			
 		}
-		return getWinner(hands, activeHands, board);
+		
+		List<Integer> winners = new ArrayList<>();
+//		int max = getMax(handValues);
+//		for (int i = 0; i < handValues.length; i++) {
+//			if (handValues[i] == max) {
+//				winners.add(i);
+//			}
+//		}
+		
+		return winners;
 	}
-
+	
 	private void grantpot(int winner) {
 		System.out.println("Congratulations, " + table.getPlayer(winner) + ", you won a " + pot + " chip pot.");
 		table.addToStack(winner, pot);
+	}
+
+	private void grantpot(List<Integer> winners) {
+		int winnings = pot / winners.size(); 
+		String winnerList = "";
+		for (int winner : winners) {
+			table.addToStack(winner, winnings);
+			winnerList += table.getPlayer(winner) + ", ";
+		}
+		winnerList = winnerList.substring(0, winnerList.length() - 2);
+		System.out.println("Congratulations, " + winnerList + ", you won a " + winnings + " chip pot.");
 	}
 
 	// TODO: Delete
@@ -244,12 +265,16 @@ public class NLHEHandPlayer implements GamePlayer {
 		return Math.abs(a - b) < 0.0001;
 	}
 	
-	public static int getWinner(TwoCardHand[] hands, List<Integer> activeHands, Card[] board) {
-		Arrays.sort(board);
+	public static int getMax(int[] array) {
+		int max = array[0]; // TODO: Check null/0 length
+		for (int num : array) {
+			if (num > max) {
+				max = num;
+			}
+		}
 		
-		return -1;
+		return max;
 	}
-
 }
 
 
