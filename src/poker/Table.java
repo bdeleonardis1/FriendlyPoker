@@ -80,12 +80,9 @@ public class Table {
 		return stack;
 	}
 	
-	public boolean removeFromStack(int position, String player, double amount) {
+	public boolean removeFromStack(int position, double amount) {
+		System.out.println("Removing");
 		if (position < 0 || position >= handed) {
-			return false;
-		}
-		
-		if (player == null || !player.equals(seats[position])) {
 			return false;
 		}
 		
@@ -94,15 +91,13 @@ public class Table {
 		}
 		
 		stacks[position] -= amount;
+		System.out.println("Stacks: " + Arrays.toString(stacks));
 		return true;
 	}
 	
-	public boolean addToStack(int position, String player, double amount) {
+	public boolean addToStack(int position, double amount) {
+		System.out.println("In here");
 		if (position < 0 || position >= handed) {
-			return false;
-		}
-		
-		if (player == null || !player.equals(seats[position])) {
 			return false;
 		}
 		

@@ -1,6 +1,8 @@
 package poker;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 
 public class NLHEHandPlayer implements GamePlayer {
@@ -9,6 +11,7 @@ public class NLHEHandPlayer implements GamePlayer {
 	private TwoCardHand[] hands;
 	private boolean[] active;
 	private double[] committed;
+	private Card[] board;
 	private int button; // convenience
 	private int pot;
 	private int totalBet;
@@ -24,6 +27,7 @@ public class NLHEHandPlayer implements GamePlayer {
 		this.pot = 0;
 		this.totalBet = 0;
 		this.lastAggressor = button;
+		this.board = new Card[5];
 	}
 
 	@Override
@@ -80,12 +84,20 @@ public class NLHEHandPlayer implements GamePlayer {
 	}
 
 	private void dealFlop() {
+		deck.dealCard(); // burn
+		board[0] = deck.dealCard();
+		board[1] = deck.dealCard();
+		board[2] = deck.dealCard();
 	}
 
 	private void dealTurn() {
+		deck.dealCard(); // burn
+		board[3] = deck.dealCard();
 	}
 
 	private void dealRiver() {
+		deck.dealCard(); // burn
+		board[4] = deck.dealCard();
 	}
 
 	private int betting(boolean preflop) {
@@ -99,19 +111,21 @@ public class NLHEHandPlayer implements GamePlayer {
 			
 			int smallBlind = nextIndex(button), bigBlind = nextIndex(smallBlind);
 			committed[smallBlind] = table.getSmallBlind();
+			table.removeFromStack(smallBlind, table.getSmallBlind());
 			committed[bigBlind] = table.getBigBlind();
+			table.removeFromStack(bigBlind, table.getBigBlind());
 			totalBet = bigBlind;
 			currIndex = nextIndex(bigBlind);
 			lastAggressor = bigBlind;
-			System.out.println("Bottom of if");
+			pot += table.getSmallBlind() + table.getBigBlind();
 		} else {
 			currIndex = nextIndex(button);
 			lastAggressor = currIndex;
 		}
 		
 		Scanner scan = new Scanner(System.in);
-		
-		while (currIndex != lastAggressor) {
+				
+		do {
 			System.out.println(table.getPlayer(currIndex) + ", what would you like to do?");
 			if (doubleEquals(committed[currIndex], totalBet)) {
 				System.out.println("C - check");
@@ -126,6 +140,7 @@ public class NLHEHandPlayer implements GamePlayer {
 			switch(input[0].charAt(0)) {
 			case 'C':
 				pot += totalBet - committed[currIndex];
+				table.removeFromStack(currIndex, totalBet - committed[currIndex]);
 				committed[currIndex] = totalBet;
 				break;
 			case 'B':
@@ -135,15 +150,23 @@ public class NLHEHandPlayer implements GamePlayer {
 				// TODO: make sure it's at least as big as the last raise
 				if (amount > totalBet) {
 					pot += amount - committed[currIndex];
+					table.removeFromStack(currIndex, amount - committed[currIndex]);
+					committed[currIndex] = amount;
 					totalBet = amount;
 					lastAggressor = currIndex;
 				}
+				break;
 			case 'F':
 				active[currIndex] = false;
+				break;
 			}
 			currIndex = nextIndex(currIndex);
-		}
+		} while (currIndex != lastAggressor);
 		
+		for (int i = 0; i < committed.length; i++) {
+			committed[i] = 0;
+		}
+		totalBet = 0;
 		return nonshowdownWinner();
 	}
 	
@@ -165,11 +188,19 @@ public class NLHEHandPlayer implements GamePlayer {
 	}
 
 	private int showdown() {
-		return -1;
+		List<Integer> activeHands = new LinkedList<>();
+		for (int i = 0; i < active.length; i++) {
+			if (active[i]) {
+				activeHands.add(i);
+			}
+			
+		}
+		return getWinner(hands, activeHands, board);
 	}
 
 	private void grantpot(int winner) {
-		//
+		System.out.println("Congratulations, " + table.getPlayer(winner) + ", you won a " + pot + " chip pot.");
+		table.addToStack(winner, pot);
 	}
 
 	// TODO: Delete
@@ -209,7 +240,22 @@ public class NLHEHandPlayer implements GamePlayer {
 		return curr;
 	}
 	
-	private boolean doubleEquals(double a, double b) {
+	public static boolean doubleEquals(double a, double b) {
 		return Math.abs(a - b) < 0.0001;
 	}
+	
+	public static int getWinner(TwoCardHand[] hands, List<Integer> activeHands, Card[] board) {
+		Arrays.sort(board);
+		
+		return -1;
+	}
+
 }
+
+
+//System.out.println("----------------------------------------------");
+//System.out.println("currIndex: " + currIndex);
+//System.out.println("active: " + Arrays.toString(active));
+//System.out.println("committed: " + Arrays.toString(committed));
+//System.out.println("seats: " + Arrays.toString(table.getSeats()));
+//System.out.println("----------------------------------------------");

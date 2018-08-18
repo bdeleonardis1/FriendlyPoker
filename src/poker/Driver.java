@@ -10,6 +10,9 @@ public class Driver {
 		t.startGame();
 		NLHEHandPlayer player = new NLHEHandPlayer(t, new TestDeck());
 		player.playHand();
+		System.out.println("Brian stack: " + t.getStack(0));
+		System.out.println("Jesse stack: " + t.getStack(1));
+		System.out.println("Jake stack: " + t.getStack(2));
 	}
 
 }

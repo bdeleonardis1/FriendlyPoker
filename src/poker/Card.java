@@ -3,7 +3,7 @@ package poker;
 enum Suit {heart, diamond, spade, club};
 enum Rank {two, three, four, five, six, seven, eight, nine, ten, jack, queen, king, ace};
 
-public class Card {
+public class Card implements Comparable<Card> {
 	private Rank rank;
 	private Suit suit;
 	
@@ -84,5 +84,9 @@ public class Card {
 		default:
 			return "Error";
 		}
+	}
+	
+	public int compareTo(Card card) {
+		return -1;
 	}
 }
