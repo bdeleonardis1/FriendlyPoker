@@ -37,7 +37,7 @@ public class NLHEHandPlayer implements GamePlayer {
 	public void playHand() {
 		int winner;
 		dealHand();
-		System.out.println("Dealt the hand.");
+		setupPreflop();
 		winner = betting(true);
 		if (winner != -1) {
 			
@@ -45,18 +45,21 @@ public class NLHEHandPlayer implements GamePlayer {
 			return;
 		}
 		dealFlop();
+		setupOtherStreets();
 		winner = betting(false);
 		if (winner != -1) {
 			grantpot(winner);
 			return;
 		}
 		dealTurn();
+		setupOtherStreets();
 		winner = betting(false);
 		if (winner != -1) {
 			grantpot(winner);
 			return;
 		}
 		dealRiver();
+		setupOtherStreets();
 		winner = betting(false);
 		if (winner != -1) {
 			grantpot(winner);
@@ -121,15 +124,13 @@ public class NLHEHandPlayer implements GamePlayer {
 		lastAggressor = bigBlind;
 		pot += table.getSmallBlind() + table.getBigBlind();
 	}
+	
+	private void setupOtherStreets() {
+		currIndex = nextIndex(button);
+		lastAggressor = currIndex;
+	}
 
 	private int betting(boolean preflop) {
-		int currIndex = -1;
-		if (preflop) {
-			
-		} else {
-			currIndex = nextIndex(button);
-			lastAggressor = currIndex;
-		}
 		
 		Scanner scan = new Scanner(System.in);
 				
