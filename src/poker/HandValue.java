@@ -33,7 +33,7 @@ public class HandValue implements Comparable<HandValue> {
 	private Hand hand;
 	private Card[] bestFiveInOrder;
 	private Map<Rank, Integer> rankFreqs;
-	private Card[] sortedOnRank;
+	private Card[] sortedOnRank; // descending order
 	private TwoCardHand holeCards;
 	private Card[] board;
 
@@ -191,7 +191,34 @@ public class HandValue implements Comparable<HandValue> {
 	}
 
 	private boolean checkFlush() {
-		return false;
+		Map<Suit, Integer> suitCount = new EnumMap<>(Suit.class);
+		for (Suit suit : Suit.values()) {
+			suitCount.put(suit, 0);
+		}
+		
+		for (Card c : sortedOnRank) {
+			Suit suit = c.getSuit();
+			suitCount.put(suit, suitCount.get(suit) + 1);
+		}
+		
+		for (Entry<Suit, Integer> freqs : suitCount.entrySet()) {
+			if (freqs.getValue() >= 5) {
+				hand = Hand.Flush;
+				int i = 0;
+				for (Card c : sortedOnRank) {
+					if (c.getSuit() == freqs.getKey()) {
+						bestFiveInOrder[i] = c;
+						i++;
+					}
+					
+					if (i == 5) {
+						break;
+					}
+				}
+			}
+		}
+		
+		return hand == Hand.Flush;
 	}
 
 	// TODO: fix wheel
@@ -255,14 +282,69 @@ public class HandValue implements Comparable<HandValue> {
 	}
 
 	private boolean checkTwoPair() {
-		return false;
+		Rank lower = null, higher = null;
+		Rank[] ranks = Rank.values();
+		for (int i = ranks.length - 1; i >= 0; i--) {
+			Rank rank = ranks[i];
+			if (rankFreqs.containsKey(rank) && rankFreqs.get(rank) == 2) {
+				if (higher == null) {
+					higher = rank;
+				} else {
+					lower = rank;
+					break;
+				}
+			}
+		}
+		
+		if (lower != null && higher != null) {
+			hand = Hand.TwoPair;
+			bestFiveInOrder[0] = getIthRank(holeCards, board, higher, 0);
+			bestFiveInOrder[1] = getIthRank(holeCards, board, higher, 1);
+			bestFiveInOrder[2] = getIthRank(holeCards, board, lower, 0);
+			bestFiveInOrder[3] = getIthRank(holeCards, board, lower, 1);
+			
+			int i = 0;
+			while (sortedOnRank[i].getRank() == lower || sortedOnRank[i].getRank() == higher) {
+				i++;
+			}
+			bestFiveInOrder[4] = sortedOnRank[i];
+		}
+		
+		return lower != null && higher != null;
 	}
 
 	private boolean checkPair() {
-		return false;
+		Rank pair = null;
+		for (Entry<Rank, Integer> freq : rankFreqs.entrySet()) {
+			if (freq.getValue() == 2) {
+				pair = freq.getKey();
+			}
+		}
+		
+		if (pair != null) {
+			hand = Hand.Pair;
+			bestFiveInOrder[0] = getIthRank(holeCards, board, pair, 0);
+			bestFiveInOrder[1] = getIthRank(holeCards, board, pair, 1);
+			
+			int i = 0;
+			for (int c = 2; c < 5; c++) {
+				while (sortedOnRank[i].getRank() == pair) {
+					i++;
+				}
+				bestFiveInOrder[c] = sortedOnRank[i];
+				i++;
+			}
+		}
+		
+		return pair != null;
+	
 	}
 
 	private boolean checkHigh() {
+		hand = Hand.High;
+		for (int i = 0; i < 5; i++) {
+			bestFiveInOrder[i] = sortedOnRank[i];
+		}
 		return true;
 	}
 

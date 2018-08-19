@@ -17,6 +17,7 @@ public class NLHEHandPlayer implements GamePlayer {
 	private int pot;
 	private int totalBet;
 	private int lastAggressor;
+	private int currIndex;
 
 	public NLHEHandPlayer(Table table, Deck deck) {
 		this.table = table;
@@ -27,6 +28,7 @@ public class NLHEHandPlayer implements GamePlayer {
 		this.button = table.getButtonIndex();
 		this.pot = 0;
 		this.totalBet = 0;
+		this.currIndex = -1;
 		this.lastAggressor = button;
 		this.board = new Card[5];
 	}
@@ -101,25 +103,29 @@ public class NLHEHandPlayer implements GamePlayer {
 		deck.dealCard(); // burn
 		board[4] = deck.dealCard();
 	}
+	
+	private void setupPreflop() {
+		for (int i = 0; i < active.length; i++) {
+			if (table.getPlayer(i) != null) {
+				active[i] = true;
+			}
+		}
+		
+		int smallBlind = nextIndex(button), bigBlind = nextIndex(smallBlind);
+		committed[smallBlind] = table.getSmallBlind();
+		table.removeFromStack(smallBlind, table.getSmallBlind());
+		committed[bigBlind] = table.getBigBlind();
+		table.removeFromStack(bigBlind, table.getBigBlind());
+		totalBet = bigBlind;
+		currIndex = nextIndex(bigBlind);
+		lastAggressor = bigBlind;
+		pot += table.getSmallBlind() + table.getBigBlind();
+	}
 
 	private int betting(boolean preflop) {
 		int currIndex = -1;
 		if (preflop) {
-			for (int i = 0; i < active.length; i++) {
-				if (table.getPlayer(i) != null) {
-					active[i] = true;
-				}
-			}
 			
-			int smallBlind = nextIndex(button), bigBlind = nextIndex(smallBlind);
-			committed[smallBlind] = table.getSmallBlind();
-			table.removeFromStack(smallBlind, table.getSmallBlind());
-			committed[bigBlind] = table.getBigBlind();
-			table.removeFromStack(bigBlind, table.getBigBlind());
-			totalBet = bigBlind;
-			currIndex = nextIndex(bigBlind);
-			lastAggressor = bigBlind;
-			pot += table.getSmallBlind() + table.getBigBlind();
 		} else {
 			currIndex = nextIndex(button);
 			lastAggressor = currIndex;
