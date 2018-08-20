@@ -14,10 +14,11 @@ public class NLHEHandPlayer implements GamePlayer {
 	private double[] committed;
 	private Card[] board;
 	private int button; // convenience
-	private int pot;
+	private double pot;
 	private int totalBet;
 	private int lastAggressor;
 	private int currIndex;
+	private boolean bettingRoundStarted;
 
 	public NLHEHandPlayer(Table table, Deck deck) {
 		this.table = table;
@@ -31,42 +32,46 @@ public class NLHEHandPlayer implements GamePlayer {
 		this.currIndex = -1;
 		this.lastAggressor = button;
 		this.board = new Card[5];
+		bettingRoundStarted = true;
 	}
 
 	@Override
 	public void playHand() {
-		int winner;
+//		int winner;
+//		dealHand();
+//		setupPreflop();
+//		winner = betting(true);
+//		if (winner != -1) {
+//			
+//			grantpot(winner);
+//			return;
+//		}
+//		dealFlop();
+//		setupOtherStreets();
+//		winner = betting(false);
+//		if (winner != -1) {
+//			grantpot(winner);
+//			return;
+//		}
+//		dealTurn();
+//		setupOtherStreets();
+//		winner = betting(false);
+//		if (winner != -1) {
+//			grantpot(winner);
+//			return;
+//		}
+//		dealRiver();
+//		setupOtherStreets();
+//		winner = betting(false);
+//		if (winner != -1) {
+//			grantpot(winner);
+//			return;
+//		}
+//		List<Integer> winners = showdown();
+//		grantpot(winners);
 		dealHand();
 		setupPreflop();
-		winner = betting(true);
-		if (winner != -1) {
-			
-			grantpot(winner);
-			return;
-		}
-		dealFlop();
-		setupOtherStreets();
-		winner = betting(false);
-		if (winner != -1) {
-			grantpot(winner);
-			return;
-		}
-		dealTurn();
-		setupOtherStreets();
-		winner = betting(false);
-		if (winner != -1) {
-			grantpot(winner);
-			return;
-		}
-		dealRiver();
-		setupOtherStreets();
-		winner = betting(false);
-		if (winner != -1) {
-			grantpot(winner);
-			return;
-		}
-		List<Integer> winners = showdown();
-		grantpot(winners);
+		waitForInput();
 	}
 
 	private void dealHand() {
@@ -95,16 +100,19 @@ public class NLHEHandPlayer implements GamePlayer {
 		board[0] = deck.dealCard();
 		board[1] = deck.dealCard();
 		board[2] = deck.dealCard();
+		System.out.println("The board is now: " + Arrays.toString(board));
 	}
 
 	private void dealTurn() {
 		deck.dealCard(); // burn
 		board[3] = deck.dealCard();
+		System.out.println("The board is now: " + Arrays.toString(board));
 	}
 
 	private void dealRiver() {
 		deck.dealCard(); // burn
 		board[4] = deck.dealCard();
+		System.out.println("The board is now: " + Arrays.toString(board));
 	}
 	
 	private void setupPreflop() {
@@ -121,8 +129,9 @@ public class NLHEHandPlayer implements GamePlayer {
 		table.removeFromStack(bigBlind, table.getBigBlind());
 		totalBet = bigBlind;
 		currIndex = nextIndex(bigBlind);
-		lastAggressor = bigBlind;
+		lastAggressor = nextIndex(bigBlind);
 		pot += table.getSmallBlind() + table.getBigBlind();
+		bettingRoundStarted = true;
 	}
 	
 	private void setupOtherStreets() {
@@ -130,56 +139,95 @@ public class NLHEHandPlayer implements GamePlayer {
 		lastAggressor = currIndex;
 	}
 
-	private int betting(boolean preflop) {
-		
+//	private int betting(boolean preflop) {		
+////		do {
+////			String[] input = waitForInput();
+////			handleBet(input);
+////		} while (currIndex != lastAggressor);
+////		
+////		for (int i = 0; i < committed.length; i++) {
+////			committed[i] = 0;
+////		}
+////		totalBet = 0;
+////		return nonshowdownWinner();
+//	}
+	
+	private void waitForInput() {
 		Scanner scan = new Scanner(System.in);
-				
-		do {
-			System.out.println(table.getPlayer(currIndex) + ", what would you like to do?");
-			if (doubleEquals(committed[currIndex], totalBet)) {
-				System.out.println("C - check");
-				System.out.println("B # - bet # amount");
-			} else {
-				System.out.println("F - fold");
-				System.out.println("C - call " + (totalBet - committed[currIndex]));
-				System.out.println("R # - raise to #");
-			}
-			String[] input = scan.nextLine().split(" ");
-			
-			switch(input[0].charAt(0)) {
-			case 'C':
-				pot += totalBet - committed[currIndex];
-				table.removeFromStack(currIndex, totalBet - committed[currIndex]);
-				committed[currIndex] = totalBet;
-				break;
-			case 'B':
-			case 'R':
-				int amount = Integer.parseInt(input[1]);
-				
-				// TODO: make sure it's at least as big as the last raise
-				if (amount > totalBet) {
-					pot += amount - committed[currIndex];
-					table.removeFromStack(currIndex, amount - committed[currIndex]);
-					committed[currIndex] = amount;
-					totalBet = amount;
-					lastAggressor = currIndex;
-				}
-				break;
-			case 'F':
-				active[currIndex] = false;
-				break;
-			}
-			currIndex = nextIndex(currIndex);
-		} while (currIndex != lastAggressor);
-		
-		for (int i = 0; i < committed.length; i++) {
-			committed[i] = 0;
+
+		System.out.println(table.getPlayer(currIndex) + ", what would you like to do? Your hand is: " + hands[currIndex]);
+		if (doubleEquals(committed[currIndex], totalBet)) {
+			System.out.println("C - check");
+			System.out.println("B # - bet # amount");
+		} else {
+			System.out.println("F - fold");
+			System.out.println("C - call " + (totalBet - committed[currIndex]));
+			System.out.println("R # - raise to #");
 		}
-		totalBet = 0;
-		return nonshowdownWinner();
+		String[] input = scan.nextLine().split(" ");
+		handleBet(input);
 	}
 	
-	private int nonshowdownWinner() {
+	private void handleBet(String[] input) {
+		switch(input[0].charAt(0)) {
+		case 'C':
+			pot += totalBet - committed[currIndex];
+			table.removeFromStack(currIndex, totalBet - committed[currIndex]);
+			committed[currIndex] = totalBet;
+			break;
+		case 'B':
+		case 'R':
+			int amount = Integer.parseInt(input[1]);
+			
+			// TODO: make sure it's at least as big as the last raise
+			if (amount > totalBet) {
+				pot += amount - committed[currIndex];
+				table.removeFromStack(currIndex, amount - committed[currIndex]);
+				committed[currIndex] = amount;
+				totalBet = amount;
+				lastAggressor = currIndex;
+			}
+			break;
+		case 'F':
+			active[currIndex] = false;
+			break;
+		}
+		currIndex = nextIndex(currIndex);
+		
+		if (currIndex == lastAggressor) {
+			System.out.println("Now way?");
+			for (int i = 0; i < committed.length; i++) {
+				committed[i] = 0;
+			}
+			totalBet = 0;
+			
+			if (board[2] == null) {
+				if (nonshowdownWinner()) {
+					return;
+				}
+				dealFlop();
+				setupOtherStreets();
+			} else if (board[3] == null) {
+				if (nonshowdownWinner()) {
+					return;
+				}
+				dealTurn();
+				setupOtherStreets();
+			} else if (board[4] == null) {
+				if (nonshowdownWinner()) {
+					return;
+				}
+				dealRiver();
+				setupOtherStreets();
+			} else {
+				showdown();
+				return;
+			}
+		} 
+		waitForInput();
+	}
+	
+	private boolean nonshowdownWinner() {
 		int winner = -1;
 		int actives = 0;
 		for (int i = 0; i < active.length; i++) {
@@ -188,31 +236,36 @@ public class NLHEHandPlayer implements GamePlayer {
 				actives += 1;
 				
 				if (actives > 1) {
-					return -1;
+					return false;
 				}
 			}
 		}
 		
-		return winner;
+		if (actives == 1) {
+			grantpot(winner);
+		}
+		
+		return actives == 1;
 	}
 
-	private List<Integer> showdown() {
+	private void showdown() {
 		HandValue[] handValues = new HandValue[hands.length];
 		for (int i = 0; i < hands.length; i++) {
 			if (active[i]) {
+				System.out.println("Still active ma dude");
 				handValues[i] = HandValue.getHandValue(hands[i], board); 
 			}
 		}
 		
 		List<Integer> winners = new ArrayList<>();
-//		int max = getMax(handValues);
-//		for (int i = 0; i < handValues.length; i++) {
-//			if (handValues[i] == max) {
-//				winners.add(i);
-//			}
-//		}
+		HandValue max = getMax(handValues);
+		for (int i = 0; i < handValues.length; i++) {
+			if (handValues[i] != null && handValues[i].compareTo(max) == 0) {
+				winners.add(i);
+			}
+		}
 		
-		return winners;
+		grantpot(winners);
 	}
 	
 	private void grantpot(int winner) {
@@ -221,7 +274,7 @@ public class NLHEHandPlayer implements GamePlayer {
 	}
 
 	private void grantpot(List<Integer> winners) {
-		int winnings = pot / winners.size(); 
+		double winnings = pot / winners.size(); 
 		String winnerList = "";
 		for (int winner : winners) {
 			table.addToStack(winner, winnings);
@@ -272,11 +325,16 @@ public class NLHEHandPlayer implements GamePlayer {
 		return Math.abs(a - b) < 0.0001;
 	}
 	
-	public static int getMax(int[] array) {
-		int max = array[0]; // TODO: Check null/0 length
-		for (int num : array) {
-			if (num > max) {
-				max = num;
+	public static HandValue getMax(HandValue[] array) {
+		HandValue max = array[0]; // TODO: Check null/0 length
+		int i = 0;
+		while (max == null) {
+			i++;
+			max = array[i];
+		}
+		for (HandValue hand : array) {
+			if (hand != null && hand.compareTo(max) > 0) {
+				max = hand;
 			}
 		}
 		
